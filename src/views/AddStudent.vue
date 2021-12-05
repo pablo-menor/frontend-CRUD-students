@@ -1,7 +1,7 @@
 <template>
   <div class="add-container">
     
-    <form  class = "form-student" action="http://localhost:3000/save"  method="POST">
+    <form  class = "form-student" action="https://backend-students-crud.herokuapp.com/save"  method="POST">
         <input id="name" type="text" placeholder="Name" name="name" required>
         <input id="lastname" type="text" placeholder="Last Name" name="lastname" required>
         <input id="course" type="text" placeholder="Course" name="course">

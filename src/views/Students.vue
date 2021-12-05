@@ -8,13 +8,13 @@
     v-on:click="bringUserByName"
     v-show="students"
   ></i>
-  <section class="students" v-show="students">
+  <section class="students" v-show="students && !error">
     <div class="headings">
       <p>NAME</p>
       <p>LASTNAME</p>
       <p>COURSE</p>
       <p>ACTIONS</p>
-    </div>  
+    </div>
     <Card
       v-for="(item, i) in studentInfo"
       :key="i"
@@ -22,59 +22,91 @@
       :lastName="item.lastname"
       :course="item.course"
       :id="item.id"
-      @click="update=true" 
+      @click="getPropsFromSelectedCard(item)"
       @studentDeleted="countStudents()"
-    /> 
+    />
+    <!-- @click="update=true"  -->
     <!-- añadir condición para que si DELETED update se mantenga en false  -->
-  
   </section>
 
   <div class="no-data" v-show="!students">
     <i class="fas fa-exclamation-circle warning"></i>
     <p>Database empty!!!</p>
   </div>
+  <div class="error" v-show="error">
+    <i class="fas fa-exclamation-circle warning"></i>
+    <p>Sorry, try a different name</p>
+  </div>
 
-  <UserDeleted v-if="userDeleted" class="user-deleted"/>
-  <UpdateCard v-if="update" class="updated-user" :name="'Pablito'" :lastName="'Minor'" :course="'DAW'"/>
-
+  <UserDeleted v-if="userDeleted" class="user-deleted" />
+  <UserUpdated v-if="updatedDiv" class="user-deleted" />
+  <UpdateCard
+    v-if="update"
+    class="updated-user"
+    :name="name"
+    :lastName="lastName"
+    :course="course"
+    :id="id"
+    @closedTab="update = false"
+    @studentUpdated="studentUpdated()"
+  />
 </template>
 
 <script>
 import Card from "@/components/Card.vue";
 import UserDeleted from "@/components/UserDeleted.vue";
 import UpdateCard from "@/components/UpdateCard.vue";
+import UserUpdated from "@/components/UserUpdated";
 
 export default {
   components: {
     Card,
     UserDeleted,
-    UpdateCard
+    UpdateCard,
+    UserUpdated
   },
   data() {
     return {
       students: true,
       studentInfo: [],
       cont: 0,
-      userDeleted : false,
-      update: false
+      userDeleted: false,
+      update: false,
+      error: false,
+      updatedDiv: false,
+      //Name, lastName and Course from selected card
+      name: "",
+      lastName: "",
+      course: "",
+      id: "",
     };
   },
   methods: {
-    countStudents(){
+    getPropsFromSelectedCard(item) {
+      this.name = item.name;
+      this.lastName = item.lastname;
+      this.course = item.course;
+      this.id = item.id;
+      this.update = true;
+    },
+    countStudents() {
+      setTimeout(() => {
+         this.update = false;
+      }, 2);
       this.cont--;
-      if (this.cont===0) {
+      if (this.cont === 0) {
         this.students = false;
-      }
-      else{
+      } else {
+       
         this.userDeleted = true;
         this.studentInfo = [];
         this.getStudents();
-        this.update = false; 
-        setTimeout(() => this.userDeleted = false, 1000)
-      } 
+        this.update = false;
+        setTimeout(() => (this.userDeleted = false), 1000);
+      }
     },
     getStudents() {
-      fetch("http://localhost:3000/")
+      fetch("https://backend-students-crud.herokuapp.com/")
         .then((res) => res.json())
         .then((data) => {
           console.log(data);
@@ -86,7 +118,7 @@ export default {
                 name: data[i].name,
                 lastname: data[i].lastName,
                 course: data[i].course,
-                id: data[i]._id
+                id: data[i]._id,
               };
               this.studentInfo.push(student);
               this.cont++;
@@ -100,32 +132,46 @@ export default {
       this.studentInfo = [];
       const studentName2 = document.querySelector(".search-input");
       const text = studentName2.value;
-      const url = `http://localhost:3000/${text}`;
+      const url = `https://backend-students-crud.herokuapp.com/${text}`;
       fetch(url)
         .then((res) => res.json())
         .then((data) => {
-          for (let i = 0; i < data.length; i++) {
-            const student = {
-              name: data[i].name,
-              lastname: data[i].lastName,
-              course: data[i].course,
-              id: data[i]._id
-            };
-            this.studentInfo.push(student);
+          if (data.length > 0) {
+            this.error = false;
+            for (let i = 0; i < data.length; i++) {
+              const student = {
+                name: data[i].name,
+                lastname: data[i].lastName,
+                course: data[i].course,
+                id: data[i]._id,
+              };
+              this.studentInfo.push(student);
+            }
+          } else {
+            this.error = true;
           }
         });
     },
+    studentUpdated(){
+      this.update = false;
+        this.studentInfo = [];
+        this.getStudents();
+      this.updatedDiv = true;
+       setTimeout(() => (this.updatedDiv = false), 1000);
+    }
   },
   mounted() {
     //when dom is ready
-    this.getStudents()
+    this.getStudents();
   },
 };
 </script>
 
 <style lang="scss" scoped>
 * {
-  margin: 0 auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 input {
   margin-top: 100px;
@@ -168,6 +214,10 @@ input {
     font-weight: bold;
     font-size: 0.7rem;
     width: 65vw;
+    // padding-left: 15px; //maybw this for pc view
+    p {
+      margin: 0;
+    }
   }
 }
 
@@ -185,18 +235,17 @@ input {
 }
 .no-data p {
   font-size: 1.3rem;
-} 
+}
 
-.user-deleted{
+.user-deleted {
   position: absolute;
   top: 30%;
   left: calc(50% - 100px);
 }
 
-.updated-user{
+.updated-user {
   position: absolute;
   top: 30%;
   left: calc(50% - 100px);
 }
-
 </style>

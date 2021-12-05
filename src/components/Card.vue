@@ -4,7 +4,8 @@
       <p>{{ name }}</p>
       <p>{{ lastName }}</p>
       <p>{{ course }}</p>
-      <button class="btn-delete"  @click="deleteStudent()">DELETE</button>
+      <!-- <button class="btn-delete"  @click="deleteStudent()">DELETE</button> -->
+      <span class="material-icons btn-delete"  @mouseover="cross(this)" @click="deleteStudent()">delete</span>
     </div>
   </div>
 </template>
@@ -25,7 +26,7 @@ export default {
   },  
   methods: {
     deleteStudent() {
-      const url = `http://localhost:3000/${this.id}`;
+      const url = `https://backend-students-crud.herokuapp.com/${this.id}`;
       fetch(url, {
         method: "DELETE",
         headers: {
@@ -36,13 +37,23 @@ export default {
         this.$emit('studentDeleted')
       });
     },
+    cross(t) {
+      // let p = document.querySelectorAll('p');
+      // p.style.textDecoration = 'underline';
+      // // console.log(t.sy);
+    },
   },
 };
 </script>
 <style scoped lang="scss">
 .card-container{
   margin: 0px;
+
+  &:hover{
+    cursor: pointer;
+  }
 }
+
 .card {
   margin: 0 auto;
   width: 65vw;
@@ -52,12 +63,21 @@ export default {
   margin-top: 15px;
   padding-bottom: 16px;
   border-bottom: 1px solid black;
-
   
+  p{
+    max-width: 50px;
+  }
 
   .btn-delete {
-    height: 30px;
-    margin-top: 10px;
+    margin-top: 12px;
+    font-size: 1.7em;
+    cursor: pointer;
+    color: rgb(255, 19, 19);  
+
+    &:hover{
+      color: rgb(255, 97, 97);
+    }
   }
+
 }
 </style>
